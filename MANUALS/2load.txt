@@ -1,0 +1,16 @@
+\\exampleT1600-PC.example.com\jfhg
+\\example-WS015.example.com\jfhg4
+\\example-WS031.example.com\jfhg8
+\\example-UPS3.example.com\jfhg6
+\\example-WS032.example.com\jfhg2
+\\example-UPS2.example.com\jfhg44 
+\\example-UPS1.example.com\jfhg554
+\\example-LT005.example.com\jfhg987
+\\example-LAPTOP.example.com\jfhg9786
+\\example-LT008.example.com\jfhg876
+\\example-WS034.example.com\jfhg675765
+\\example-WS036.example.com\jfhg5674 
+\\example-WS035.example.com\jfhg856
+\\example-GRAPHICS7.example.com\jfhg7856
+\\example-WS037.example.com\jfhg876
+\\example-WS038.example.com\jfhg 

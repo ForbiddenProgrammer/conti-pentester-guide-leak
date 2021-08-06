@@ -1,0 +1,1 @@
+for /f %%i in (domains.txt) do ping %%i -n 1 >> res.txt

